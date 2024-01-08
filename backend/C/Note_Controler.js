@@ -33,4 +33,53 @@ const addnote = async (req, res) => {
   }
 };
 
-module.exports = { fetchNotes, addnote };
+const updateNote = async (req, res) => {
+  try {
+    const { title, discription, tag } = req.body;
+    const newNote = {};
+    if (title) {
+      newNote.title = title;
+    }
+    if (discription) {
+      newNote.discription = discription;
+    }
+    if (tag) {
+      newNote.tag = tag;
+    }
+
+    let NoteId = await NoteSchema.findById(req.params.id);
+    if (!NoteId) {
+      return res.status(404).json({ message: "Not Found" });
+    }
+    if (NoteId.user.toString() !== req.user.id) {
+      return res.status(401).json({ message: "Not Allowed" });
+    }
+    NoteId = await NoteSchema.findByIdAndUpdate(
+      req.params.id,
+      { $set: newNote },
+      { new: true }
+    );
+    console.log(req.user.id);
+    res.json({ NoteId });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const deleteNote = async (req, res) => {
+  try {
+    let NoteId = await NoteSchema.findById(req.params.id);
+    if (!NoteId) {
+      return res.status(404).json({ message: "Not Found" });
+    }
+    if (NoteId.user.toString() !== req.user.id) {
+      return res.status(404).json({ message: "Note Allowed" });
+    }
+    NoteId = await NoteSchema.findByIdAndDelete(req.params.id);
+    res.json({ message: "Deleted" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports = { fetchNotes, addnote, updateNote, deleteNote };
